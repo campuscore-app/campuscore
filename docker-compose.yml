@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - campuscore_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api/src/CampusCore.Api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # EF Core migrations run automatically on startup (see Program.cs) —
+      # a self-hosted school just pulls the new image and restarts.
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__Issuer: CampusCore
+      Jwt__Audience: CampusCore
+      Jwt__ExpiryMinutes: 720
+      Cors__AllowedOrigins__0: ${WEB_ORIGIN}
+    ports:
+      - "5073:8080"
+
+  web:
+    build:
+      context: ./web
+      args:
+        # Baked into the built JS at image-build time — changing this after
+        # the image is built requires rebuilding, not just restarting.
+        VITE_API_BASE_URL: ${API_ORIGIN}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+
+volumes:
+  campuscore_db_data:

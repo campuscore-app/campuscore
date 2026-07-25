@@ -1,0 +1,30 @@
+# --- .NET / Visual Studio ---
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# --- Node / Vite (web) ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# --- Secrets ---
+.env
+!.env.example
+appsettings.Development.json
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Editor / OS ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db

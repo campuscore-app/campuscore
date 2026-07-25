@@ -1,0 +1,10 @@
+﻿step 1
+
+Add-Migration {Migration_Name}
+
+step 2
+
+
+Script-Migration -Idempotent -Output ".\Migrations\Sql\{script_name}.sql"
+
+
