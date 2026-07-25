@@ -1,6 +1,6 @@
 # CampusCore — Open Source School Management System (School ERP)
 
-**Open-source school management system.** Free to self-host forever, with optional premium modules and a managed cloud option for schools that don't want to run their own server.
+**Open-source school management system.** Free to self-host forever. Premium modules and a managed cloud option are planned for schools that don't want to run their own server — not yet available.
 
 [campuscore.dev](https://campuscore.dev) · Licensed under [AGPL-3.0](./LICENSE)
 
@@ -10,7 +10,7 @@
 
 ## Why this exists
 
-Most school ERP software in India is either expensive, closed-source, or both — schools pay recurring fees for basic record-keeping and have no visibility into how their data is handled. CampusCore's core modules are free and open source: any school (or developer) can self-host it, read the code, and modify it. Optional premium modules and a hosted version exist for schools that want more than the core, or don't want to manage a server themselves — that's what funds ongoing development.
+Most school ERP software in India is either expensive, closed-source, or both — schools pay recurring fees for basic record-keeping and have no visibility into how their data is handled. CampusCore's core modules are free and open source: any school (or developer) can self-host it, read the code, and modify it. Premium modules and a hosted version are planned for schools that want more than the core, or don't want to manage a server themselves, once the core is stable — that's the intended path to funding ongoing development.
 
 ## What's included (free & open source)
 
@@ -22,7 +22,7 @@ Most school ERP software in India is either expensive, closed-source, or both �
 | **Attendance** | Mark a whole class in one go ("Take Attendance"), or correct a single student's entry. Same-day edit lock keeps attendance history honest. |
 | **Fees (Basic)** | Assign fees per student, record payments against them, auditable payment history with receipt numbers. Prevents overpayment automatically. |
 
-Premium modules (timetable, exams & report cards, communications, transport, and a managed cloud-hosted option) are built on top of this same codebase but aren't part of this repository. See [campuscore.dev](https://campuscore.dev) for details.
+Premium modules (timetable, exams & report cards, communications, transport) and a managed cloud-hosted option are planned to be built on top of this same codebase, but don't exist yet — this repository is the core, free product.
 
 ## Tech stack
 
