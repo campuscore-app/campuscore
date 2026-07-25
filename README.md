@@ -37,20 +37,28 @@ Many school ERP solutions are expensive, closed-source, or both — schools pay 
 | **Attendance** | Mark a whole class in one go ("Take Attendance"), or correct a single student's entry. Same-day edit lock keeps attendance history honest. |
 | **Fees (Basic)** | Assign fees per student, record payments against them, auditable payment history with receipt numbers. Prevents overpayment automatically. |
 
-Premium modules (timetable, exams & report cards, communications, transport) and a managed cloud-hosted option are planned to be built on top of this same codebase, but don't exist yet — this repository is the core, free product.
+The free core is **single-admin**: one login runs the whole school — enough for a small school to run day-to-day and trust the product before paying anything. Multi-role access and everything beyond this table are planned as paid tiers (see [Roadmap](#roadmap)) — nothing in this repository is paywalled or crippled; premium features are additive, not restrictions on the free core.
 
 ## Roadmap
 
-- ✅ Authentication
-- ✅ Students
-- ✅ Staff
-- ✅ Attendance
-- ✅ Fees (Basic)
+**Free (core)** — this repository, available today
+- ✅ Student records, staff records, attendance, basic fees (manual tracking), dashboard, single admin login
+
+**Paid — Tier 1** (planned first: highest demand, moderate build effort)
+- 🚧 Multi-role logins (Teacher / Accountant / Front Office)
 - 🚧 Timetable
 - 🚧 Exams & Report Cards
-- 🚧 Parent Portal
-- 🚧 SMS Notifications
-- 🚧 Email Notifications
+- 🚧 SMS / WhatsApp parent notifications
+
+**Paid — Tier 2** (planned: scale & differentiation for larger schools)
+- 🚧 Online fee payment gateway
+- 🚧 Transport / GPS tracking
+- 🚧 Library
+- 🚧 Hostel
+- 🚧 Parent/Student portal or app
+- 🚧 Admissions module
+
+**Cloud**
 - 🚧 CampusCore Cloud (managed hosting)
 
 ## Tech stack
