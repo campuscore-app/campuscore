@@ -7,7 +7,6 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](./LICENSE)
 [![.NET 8](https://img.shields.io/badge/.NET-8-512BD4)](https://dotnet.microsoft.com/download/dotnet/8.0)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 ## Why this exists
 
@@ -102,6 +101,4 @@ In short: you're free to self-host, use, and modify this software, including for
 
 ## Contributing
 
-Issues and pull requests are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md) for setup and PR guidelines. Please open an issue to discuss significant changes before submitting a PR. This project follows a [Code of Conduct](./CODE_OF_CONDUCT.md).
-
-Found a security issue? Please report it privately per [SECURITY.md](./SECURITY.md) rather than opening a public issue.
+Issues and pull requests are welcome. Please open an issue to discuss significant changes before submitting a PR.
