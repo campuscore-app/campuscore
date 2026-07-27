@@ -80,6 +80,32 @@ namespace CampusCore.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("CampusCore.Api.Modules.Classes.SchoolClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClassName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassName", "Section")
+                        .IsUnique();
+
+                    b.ToTable("SchoolClasses");
+                });
+
             modelBuilder.Entity("CampusCore.Api.Modules.Fees.FeeRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -145,6 +171,24 @@ namespace CampusCore.Api.Migrations
                     b.HasIndex("FeeRecordId");
 
                     b.ToTable("PaymentEntries");
+                });
+
+            modelBuilder.Entity("CampusCore.Api.Modules.School.SchoolInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Schools");
                 });
 
             modelBuilder.Entity("CampusCore.Api.Modules.Staff.StaffMember", b =>

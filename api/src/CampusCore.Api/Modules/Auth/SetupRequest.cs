@@ -7,6 +7,7 @@ namespace CampusCore.Api.Modules.Auth;
 /// time they open the app, in the browser, no config file or server log required.</summary>
 public class SetupRequest
 {
+    public string SchoolName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ConfirmPassword { get; set; } = string.Empty;

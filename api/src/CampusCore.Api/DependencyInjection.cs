@@ -1,7 +1,9 @@
 using CampusCore.Api.Common.Utility;
 using CampusCore.Api.Modules.Attendance;
 using CampusCore.Api.Modules.Auth;
+using CampusCore.Api.Modules.Classes;
 using CampusCore.Api.Modules.Fees;
+using CampusCore.Api.Modules.School;
 using CampusCore.Api.Modules.Staff;
 using CampusCore.Api.Modules.Students;
 using FluentValidation;
@@ -17,6 +19,7 @@ public static class DependencyInjection
 
         // Auth
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ISchoolInfoRepository, SchoolInfoRepository>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthManager, AuthManager>();
         services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
@@ -47,6 +50,11 @@ public static class DependencyInjection
         services.AddScoped<IValidator<AssignFeeRequest>, AssignFeeRequestValidator>();
         services.AddScoped<IValidator<UpdateFeeRequest>, UpdateFeeRequestValidator>();
         services.AddScoped<IValidator<RecordPaymentRequest>, RecordPaymentRequestValidator>();
+
+        // Classes (master data for Class/Section)
+        services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
+        services.AddScoped<ISchoolClassManager, SchoolClassManager>();
+        services.AddScoped<IValidator<CreateSchoolClassRequest>, CreateSchoolClassRequestValidator>();
 
         return services;
     }

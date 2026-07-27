@@ -2,17 +2,22 @@ import { useState, type FormEvent } from "react";
 import type { FeeRecord, PaymentMode } from "../../shared/types";
 import { formatPaymentMode } from "../../shared/types";
 import { required, isPositiveNumber } from "../../shared/validation/rules";
+import { useFieldValidation } from "../../shared/validation/useFieldValidation";
 
 interface RecordPaymentFormProps {
   fee: FeeRecord;
   onCancel: () => void;
-  onSubmit: (amount: number, mode: PaymentMode) => void;
+  onSubmit: (amount: number, mode: PaymentMode) => Promise<void>;
 }
 
 // Wire values match the backend's PaymentMode enum member names exactly
 // (see shared/types/index.ts) — formatPaymentMode() supplies the
 // human-readable label shown in the dropdown.
 const PAYMENT_MODES: PaymentMode[] = ["Cash", "Cheque", "BankTransfer", "Upi"];
+
+interface FormErrors {
+  amount?: string;
+}
 
 /**
  * Form shown inside the "Record Payment" modal for one fee record.
@@ -25,24 +30,29 @@ export function RecordPaymentForm({ fee, onCancel, onSubmit }: RecordPaymentForm
   const remainingDue = fee.amountDue - fee.amountPaid;
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<PaymentMode>("Cash");
-  const [error, setError] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function validate(): string | undefined {
+  function validate(): FormErrors {
     const basicError = required(amount, "Payment amount") ?? isPositiveNumber(amount, "Payment amount");
-    if (basicError) return basicError;
+    if (basicError) return { amount: basicError };
 
     if (Number(amount) > remainingDue) {
-      return `Payment cannot exceed the remaining balance of ₹${remainingDue.toLocaleString("en-IN")}.`;
+      return { amount: `Payment cannot exceed the remaining balance of ₹${remainingDue.toLocaleString("en-IN")}.` };
     }
-    return undefined;
+    return {};
   }
 
-  function handleSubmit(event: FormEvent) {
+  const { shownError, clearError, handleBlur, validateOnSubmit, isFormValid } = useFieldValidation(validate);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const validationError = validate();
-    setError(validationError);
-    if (validationError) return;
-    onSubmit(Number(amount), mode);
+    if (!validateOnSubmit()) return;
+    setIsSubmitting(true);
+    try {
+      await onSubmit(Number(amount), mode);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -55,14 +65,21 @@ export function RecordPaymentForm({ fee, onCancel, onSubmit }: RecordPaymentForm
 
       <div className="form-row form-row-split">
         <div>
-          <label className="field-label">Payment Amount (₹)</label>
+          <label className="field-label">
+            Payment Amount (₹)<span className="required-asterisk">*</span>
+          </label>
           <input
-            className={error ? "text-input text-input-error" : "text-input"}
+            className={shownError("amount") ? "text-input text-input-error" : "text-input"}
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              clearError("amount");
+            }}
+            onBlur={() => handleBlur("amount")}
             placeholder={`Up to ${remainingDue}`}
+            disabled={isSubmitting}
           />
-          {error && <span className="field-error">{error}</span>}
+          {shownError("amount") && <span className="field-error">{shownError("amount")}</span>}
         </div>
         <div>
           <label className="field-label">Payment Mode</label>
@@ -70,6 +87,7 @@ export function RecordPaymentForm({ fee, onCancel, onSubmit }: RecordPaymentForm
             className="select-input"
             value={mode}
             onChange={(e) => setMode(e.target.value as PaymentMode)}
+            disabled={isSubmitting}
           >
             {PAYMENT_MODES.map((option) => (
               <option key={option} value={option}>
@@ -81,11 +99,11 @@ export function RecordPaymentForm({ fee, onCancel, onSubmit }: RecordPaymentForm
       </div>
 
       <div className="modal-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button type="button" className="secondary-button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="primary-button">
-          Record Payment
+        <button type="submit" className="primary-button" disabled={!isFormValid || isSubmitting}>
+          {isSubmitting ? "Recording…" : "Record Payment"}
         </button>
       </div>
     </form>

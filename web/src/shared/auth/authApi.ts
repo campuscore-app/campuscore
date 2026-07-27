@@ -4,6 +4,7 @@ import { apiFetch } from "../api/client";
 export interface LoginResult {
   token: string;
   email: string;
+  schoolName: string;
 }
 
 /**
@@ -29,13 +30,19 @@ export function isSetupRequired(): Promise<boolean> {
 }
 
 /**
- * Creates the first (and, on the free tier, only) admin account. Only
- * succeeds once — the backend refuses if any user already exists (see
- * AuthManager.SetupAsync) — so this can't be used to sneak in a second admin later.
+ * Creates the first (and, on the free tier, only) admin account, plus the
+ * one school record this installation serves. Only succeeds once — the
+ * backend refuses if any user already exists (see AuthManager.SetupAsync)
+ * — so this can't be used to sneak in a second admin later.
  */
-export function setup(email: string, password: string, confirmPassword: string): Promise<LoginResult> {
+export function setup(
+  schoolName: string,
+  email: string,
+  password: string,
+  confirmPassword: string,
+): Promise<LoginResult> {
   return apiFetch<LoginResult>("/api/auth/setup", {
     method: "POST",
-    body: JSON.stringify({ email, password, confirmPassword }),
+    body: JSON.stringify({ schoolName, email, password, confirmPassword }),
   });
 }

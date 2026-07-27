@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import type { StaffMember } from "../../shared/types";
 import { required, isPhone, notFutureDate } from "../../shared/validation/rules";
+import { useFieldValidation } from "../../shared/validation/useFieldValidation";
 
 interface AddStaffFormProps {
   /** When set, the form starts pre-filled and behaves as an edit rather than adding a new staff member. */
   initialValues?: Omit<StaffMember, "id">;
   onCancel: () => void;
-  onSubmit: (staff: Omit<StaffMember, "id">) => void;
+  onSubmit: (staff: Omit<StaffMember, "id">) => Promise<void>;
 }
 
 interface FormErrors {
@@ -33,7 +34,7 @@ export function AddStaffForm({ initialValues, onCancel, onSubmit }: AddStaffForm
       joinedOn: "",
     },
   );
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -61,76 +62,117 @@ export function AddStaffForm({ initialValues, onCancel, onSubmit }: AddStaffForm
     return nextErrors;
   }
 
-  function handleSubmit(event: FormEvent) {
+  const { shownError, clearError, handleBlur, validateOnSubmit, isFormValid } = useFieldValidation(validate);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-    onSubmit(form);
+    if (!validateOnSubmit()) return;
+    setIsSubmitting(true);
+    try {
+      await onSubmit(form);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form className="modal-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
-        <label className="field-label">Staff Name</label>
+        <label className="field-label">
+          Staff Name<span className="required-asterisk">*</span>
+        </label>
         <input
-          className={errors.name ? "text-input text-input-error" : "text-input"}
+          className={shownError("name") ? "text-input text-input-error" : "text-input"}
           value={form.name}
-          onChange={(e) => updateField("name", e.target.value)}
+          onChange={(e) => {
+            updateField("name", e.target.value);
+            clearError("name");
+          }}
+          onBlur={() => handleBlur("name")}
+          disabled={isSubmitting}
         />
-        {errors.name && <span className="field-error">{errors.name}</span>}
+        {shownError("name") && <span className="field-error">{shownError("name")}</span>}
       </div>
 
       <div className="form-row form-row-split">
         <div>
-          <label className="field-label">Role</label>
+          <label className="field-label">
+            Role<span className="required-asterisk">*</span>
+          </label>
           <input
-            className={errors.role ? "text-input text-input-error" : "text-input"}
+            className={shownError("role") ? "text-input text-input-error" : "text-input"}
             value={form.role}
-            onChange={(e) => updateField("role", e.target.value)}
+            onChange={(e) => {
+              updateField("role", e.target.value);
+              clearError("role");
+            }}
+            onBlur={() => handleBlur("role")}
             placeholder="e.g. Teacher"
+            disabled={isSubmitting}
           />
-          {errors.role && <span className="field-error">{errors.role}</span>}
+          {shownError("role") && <span className="field-error">{shownError("role")}</span>}
         </div>
         <div>
-          <label className="field-label">Department</label>
+          <label className="field-label">
+            Department<span className="required-asterisk">*</span>
+          </label>
           <input
-            className={errors.department ? "text-input text-input-error" : "text-input"}
+            className={shownError("department") ? "text-input text-input-error" : "text-input"}
             value={form.department}
-            onChange={(e) => updateField("department", e.target.value)}
+            onChange={(e) => {
+              updateField("department", e.target.value);
+              clearError("department");
+            }}
+            onBlur={() => handleBlur("department")}
+            disabled={isSubmitting}
           />
-          {errors.department && <span className="field-error">{errors.department}</span>}
+          {shownError("department") && <span className="field-error">{shownError("department")}</span>}
         </div>
       </div>
 
-      <div className="form-row">
-        <label className="field-label">Contact Number</label>
-        <input
-          className={errors.contact ? "text-input text-input-error" : "text-input"}
-          value={form.contact}
-          onChange={(e) => updateField("contact", e.target.value)}
-          placeholder="10-digit mobile number"
-        />
-        {errors.contact && <span className="field-error">{errors.contact}</span>}
-      </div>
-
-      <div className="form-row">
-        <label className="field-label">Joined On</label>
-        <input
-          type="date"
-          className={errors.joinedOn ? "text-input text-input-error" : "text-input"}
-          value={form.joinedOn}
-          onChange={(e) => updateField("joinedOn", e.target.value)}
-        />
-        {errors.joinedOn && <span className="field-error">{errors.joinedOn}</span>}
+      <div className="form-row form-row-split">
+        <div>
+          <label className="field-label">
+            Contact Number<span className="required-asterisk">*</span>
+          </label>
+          <input
+            className={shownError("contact") ? "text-input text-input-error" : "text-input"}
+            value={form.contact}
+            onChange={(e) => {
+              updateField("contact", e.target.value);
+              clearError("contact");
+            }}
+            onBlur={() => handleBlur("contact")}
+            placeholder="10-digit mobile number"
+            disabled={isSubmitting}
+          />
+          {shownError("contact") && <span className="field-error">{shownError("contact")}</span>}
+        </div>
+        <div>
+          <label className="field-label">
+            Joined On<span className="required-asterisk">*</span>
+          </label>
+          <input
+            type="date"
+            className={shownError("joinedOn") ? "text-input text-input-error" : "text-input"}
+            value={form.joinedOn}
+            onChange={(e) => {
+              updateField("joinedOn", e.target.value);
+              clearError("joinedOn");
+            }}
+            onBlur={() => handleBlur("joinedOn")}
+            disabled={isSubmitting}
+          />
+          {shownError("joinedOn") && <span className="field-error">{shownError("joinedOn")}</span>}
+        </div>
       </div>
 
       <div className="modal-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button type="button" className="secondary-button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="primary-button">
-          {isEditing ? "Save Changes" : "Add Staff Member"}
+        <button type="submit" className="primary-button" disabled={!isFormValid || isSubmitting}>
+          {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Add Staff Member"}
         </button>
       </div>
     </form>

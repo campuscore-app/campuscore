@@ -6,6 +6,8 @@ public class SetupRequestValidator : AbstractValidator<SetupRequest>
 {
     public SetupRequestValidator()
     {
+        RuleFor(x => x.SchoolName).NotEmpty().WithMessage("School name is required.").MaximumLength(200).WithMessage("School name must be 200 characters or fewer.");
+
         RuleFor(x => x.Email).NotEmpty().WithMessage("Email is required.").EmailAddress().WithMessage("Enter a valid email address.");
 
         // A slightly stronger minimum than regular login (6) — this is the

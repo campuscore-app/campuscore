@@ -1,3 +1,13 @@
+/** One valid (class, section) combination students can be enrolled into —
+ * master data so "10-A" vs "10 A" vs "Class 10 A" can't drift inconsistent
+ * across the register (see AddStudentForm, which sources its Class/Section
+ * dropdowns from this instead of free-typed text). */
+export interface SchoolClass {
+  id: number;
+  className: string;
+  section: string;
+}
+
 export interface Student {
   id: number;
   name: string;

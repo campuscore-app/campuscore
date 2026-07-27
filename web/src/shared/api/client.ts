@@ -62,6 +62,13 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     clearToken();
     if (window.location.pathname !== "/login") {
       window.location.href = "/login";
+      // The redirect above is a full page navigation, not instant — if we
+      // threw here, every caller's catch block would render a "session
+      // expired" error state in the moment before the browser actually
+      // navigates away. Returning a promise that never resolves instead
+      // just leaves the page's current UI in place (or loading) until the
+      // navigation completes, so nothing flashes on screen for nothing.
+      return new Promise<T>(() => {});
     }
     throw new ApiError("Your session has expired. Please sign in again.", 401, null);
   }

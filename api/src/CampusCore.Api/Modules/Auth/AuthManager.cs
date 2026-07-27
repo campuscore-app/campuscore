@@ -1,5 +1,6 @@
 using CampusCore.Api.Common;
 using CampusCore.Api.Common.Utility;
+using CampusCore.Api.Modules.School;
 using FluentValidation;
 
 namespace CampusCore.Api.Modules.Auth;
@@ -13,6 +14,7 @@ public interface IAuthManager
 
 public class AuthManager(
     IUserRepository userRepository,
+    ISchoolInfoRepository schoolInfoRepository,
     IJwtTokenService tokenService,
     IValidator<LoginRequest> loginValidator,
     IValidator<SetupRequest> setupValidator,
@@ -44,8 +46,13 @@ public class AuthManager(
             return response.BadRequest<LoginResponse>(null, "Invalid email or password.");
         }
 
+        // Fetched fresh on every login (rather than cached in the token)
+        // so a school name change is reflected immediately without
+        // forcing every signed-in user to log out and back in.
+        var school = await schoolInfoRepository.GetAsync(cancellationToken);
+
         var token = tokenService.GenerateToken(user);
-        return response.Ok(new LoginResponse { Token = token, Email = user.Email });
+        return response.Ok(new LoginResponse { Token = token, Email = user.Email, SchoolName = school?.Name ?? string.Empty });
     }
 
     /// <summary>True until the very first admin account is created. The
@@ -90,10 +97,18 @@ public class AuthManager(
             cancellationToken
         );
 
+        var school = await schoolInfoRepository.CreateAsync(
+            new SchoolInfo { Name = request.SchoolName },
+            cancellationToken
+        );
+
         // Log the school straight in after setup — asking them to fill out
         // the same email/password a second time on the login screen would
         // be a pointless extra step right after they just typed it.
         var token = tokenService.GenerateToken(user);
-        return response.Created(new LoginResponse { Token = token, Email = user.Email }, "Admin account created");
+        return response.Created(
+            new LoginResponse { Token = token, Email = user.Email, SchoolName = school.Name },
+            "Admin account created"
+        );
     }
 }

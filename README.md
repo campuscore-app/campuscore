@@ -118,6 +118,26 @@ npm run dev
 
 The web app starts on `http://localhost:5173` by default.
 
+## Backups
+
+Your school's data lives entirely in the `campuscore_db_data` Postgres volume — back that up and you have everything (students, staff, attendance, fees). Since you're self-hosting, that backup is your responsibility.
+
+**Take a backup:**
+
+```bash
+docker compose exec postgres pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup-$(date +%F).sql
+```
+
+Store the resulting `.sql` file somewhere outside this server (cloud storage, another machine) — a backup that lives on the same disk as the database doesn't protect you if that disk fails.
+
+**Restore from a backup:**
+
+```bash
+cat backup-2026-07-26.sql | docker compose exec -T postgres psql -U ${POSTGRES_USER} ${POSTGRES_DB}
+```
+
+Run this against a fresh install (after first-run setup) or an existing one you're intentionally overwriting — it replaces the current data with whatever's in the backup file.
+
 ## Project structure
 
 ```

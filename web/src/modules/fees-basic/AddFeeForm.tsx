@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { FeeRecord, Student } from "../../shared/types";
 import { required, isPositiveNumber } from "../../shared/validation/rules";
+import { useFieldValidation } from "../../shared/validation/useFieldValidation";
 
 interface AddFeeFormProps {
   /** The real enrolled students to choose from — fees can only be assigned to an actual student, never a free-typed name. */
@@ -10,7 +11,7 @@ interface AddFeeFormProps {
   /** Amount already paid against this record (only relevant when editing) — amount due can't be edited below this. */
   amountAlreadyPaid?: number;
   onCancel: () => void;
-  onSubmit: (fee: Omit<FeeRecord, "id" | "amountPaid" | "status">) => void;
+  onSubmit: (fee: Omit<FeeRecord, "id" | "amountPaid" | "status">) => Promise<void>;
 }
 
 interface FormErrors {
@@ -50,7 +51,7 @@ export function AddFeeForm({
     initialValues ? String(initialValues.amountDue) : "",
   );
   const [dueDate, setDueDate] = useState(initialValues?.dueDate ?? "");
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): FormErrors {
     const nextErrors: FormErrors = {};
@@ -73,22 +74,27 @@ export function AddFeeForm({
     return nextErrors;
   }
 
-  function handleSubmit(event: FormEvent) {
+  const { shownError, clearError, handleBlur, validateOnSubmit, isFormValid } = useFieldValidation(validate);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (!validateOnSubmit()) return;
 
     const student = students.find((s) => s.id === Number(studentId));
     if (!student) return;
 
-    onSubmit({
-      studentId: student.id,
-      studentName: student.name,
-      className: student.className,
-      amountDue: Number(amountDue),
-      dueDate,
-    });
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        studentId: student.id,
+        studentName: student.name,
+        className: student.className,
+        amountDue: Number(amountDue),
+        dueDate,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const selectedStudent = students.find((s) => s.id === Number(studentId));
@@ -96,11 +102,18 @@ export function AddFeeForm({
   return (
     <form className="modal-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
-        <label className="field-label">Student</label>
+        <label className="field-label">
+          Student<span className="required-asterisk">*</span>
+        </label>
         <select
-          className={errors.studentId ? "select-input text-input-error" : "select-input"}
+          className={shownError("studentId") ? "select-input text-input-error" : "select-input"}
           value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
+          onChange={(e) => {
+            setStudentId(e.target.value);
+            clearError("studentId");
+          }}
+          onBlur={() => handleBlur("studentId")}
+          disabled={isSubmitting}
         >
           <option value="">Select a student…</option>
           {students.map((student) => (
@@ -109,7 +122,7 @@ export function AddFeeForm({
             </option>
           ))}
         </select>
-        {errors.studentId && <span className="field-error">{errors.studentId}</span>}
+        {shownError("studentId") && <span className="field-error">{shownError("studentId")}</span>}
       </div>
 
       <div className="form-row form-row-split">
@@ -120,34 +133,48 @@ export function AddFeeForm({
           <input className="text-input" value={selectedStudent?.className ?? ""} disabled />
         </div>
         <div>
-          <label className="field-label">Amount Due (₹)</label>
+          <label className="field-label">
+            Amount Due (₹)<span className="required-asterisk">*</span>
+          </label>
           <input
-            className={errors.amountDue ? "text-input text-input-error" : "text-input"}
+            className={shownError("amountDue") ? "text-input text-input-error" : "text-input"}
             value={amountDue}
-            onChange={(e) => setAmountDue(e.target.value)}
+            onChange={(e) => {
+              setAmountDue(e.target.value);
+              clearError("amountDue");
+            }}
+            onBlur={() => handleBlur("amountDue")}
             placeholder="e.g. 15000"
+            disabled={isSubmitting}
           />
-          {errors.amountDue && <span className="field-error">{errors.amountDue}</span>}
+          {shownError("amountDue") && <span className="field-error">{shownError("amountDue")}</span>}
         </div>
       </div>
 
       <div className="form-row">
-        <label className="field-label">Due Date</label>
+        <label className="field-label">
+          Due Date<span className="required-asterisk">*</span>
+        </label>
         <input
           type="date"
-          className={errors.dueDate ? "text-input text-input-error" : "text-input"}
+          className={shownError("dueDate") ? "text-input text-input-error" : "text-input"}
           value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
+          onChange={(e) => {
+            setDueDate(e.target.value);
+            clearError("dueDate");
+          }}
+          onBlur={() => handleBlur("dueDate")}
+          disabled={isSubmitting}
         />
-        {errors.dueDate && <span className="field-error">{errors.dueDate}</span>}
+        {shownError("dueDate") && <span className="field-error">{shownError("dueDate")}</span>}
       </div>
 
       <div className="modal-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button type="button" className="secondary-button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="primary-button">
-          {isEditing ? "Save Changes" : "Assign Fee"}
+        <button type="submit" className="primary-button" disabled={!isFormValid || isSubmitting}>
+          {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Assign Fee"}
         </button>
       </div>
     </form>

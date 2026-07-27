@@ -1,7 +1,9 @@
 using System.Reflection;
 using CampusCore.Api.Modules.Attendance;
 using CampusCore.Api.Modules.Auth;
+using CampusCore.Api.Modules.Classes;
 using CampusCore.Api.Modules.Fees;
+using CampusCore.Api.Modules.School;
 using CampusCore.Api.Modules.Staff;
 using CampusCore.Api.Modules.Students;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<FeeRecord> FeeRecords => Set<FeeRecord>();
     public DbSet<PaymentEntry> PaymentEntries => Set<PaymentEntry>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<SchoolInfo> Schools => Set<SchoolInfo>();
+    public DbSet<SchoolClass> SchoolClasses => Set<SchoolClass>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

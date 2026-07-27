@@ -27,6 +27,23 @@
 
   --radius: 10px;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* Type scale — headings across the app had accreted ad hoc sizes
+     (16/18/20/22/24/28/30px, each picked in isolation for whichever
+     component was being built at the time). Naming them here doesn't
+     change how anything looks except .modal-header h2 (see below), but it
+     gives every *future* heading a fixed set of sizes to pick from instead
+     of inventing another one-off value. */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 22px;
+  --text-4xl: 24px;
+  --text-5xl: 28px;
 }
 
 /* Reset default browser spacing so our own spacing rules are predictable. */
@@ -38,8 +55,50 @@
 
 body {
   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.5;
   background: var(--color-bg);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Form controls don't inherit the page font by default — every <button>,
+   <input> and <select> falls back to the OS's own control font/appearance
+   unless told otherwise. Each input/select already set font-family: inherit
+   individually, but every button variant (.secondary-button, .link-button,
+   .row-menu-trigger, etc.) was missing it, and none reset `appearance`, so
+   Chrome/Edge on Windows still rendered its native button chrome — a faint
+   bevel/shadow — underneath. That native shadow is invisible on solid-color
+   buttons like .primary-button but visible on light ones like
+   .secondary-button, which is why "Cancel" looked subtly off compared to
+   "Save Attendance" next to it. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* .text-input/.select-input already get a focus ring on their own — this
+   covers everything else (buttons, links, row menus, pagination), which
+   previously had no visible focus state at all once `button { border: none }`
+   above suppresses the browser's own default outline shape. */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ---------- App shell: sidebar + topbar + content ---------- */
@@ -71,13 +130,23 @@ body {
 }
 
 .sidebar-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
   color: var(--color-sidebar-text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
 }
 
 .sidebar-link:hover {
@@ -113,12 +182,6 @@ body {
   color: var(--color-text);
 }
 
-.topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .topbar-user-avatar {
   width: 32px;
   height: 32px;
@@ -130,11 +193,91 @@ body {
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .topbar-user-name {
   font-size: 14px;
   color: var(--color-text-muted);
+}
+
+/* ---------- User menu (topbar dropdown) ---------- */
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.user-menu-trigger:hover {
+  background: #f3f4f6;
+}
+
+.user-menu-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.user-menu-chevron-open {
+  transform: rotate(180deg);
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 50;
+}
+
+.user-menu-email {
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.user-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.user-menu-item-danger {
+  color: #dc2626;
 }
 
 .content-area {
@@ -146,7 +289,7 @@ body {
 /* ---------- Generic page heading ---------- */
 
 .page h1 {
-  font-size: 22px;
+  font-size: var(--text-3xl);
   font-weight: 700;
 }
 
@@ -177,21 +320,37 @@ body {
 /* ---------- Stat cards (dashboard) ---------- */
 
 .stat-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: stretch;
   gap: 16px;
 }
 
 .stat-card {
-  flex: 1 1 200px;
   background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   padding: 18px 20px;
-  border-left: 4px solid transparent;
+  border-left: 3px solid transparent;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  height: 100%;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
+}
+
+.stat-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stat-card-label {
@@ -201,14 +360,25 @@ body {
 }
 
 .stat-card-value {
-  font-size: 22px;
+  font-size: var(--text-4xl);
   font-weight: 700;
+}
+
+.stat-card-value-empty {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .stat-card-blue { border-left-color: #4f46e5; }
 .stat-card-green { border-left-color: #16a34a; }
 .stat-card-amber { border-left-color: #d97706; }
 .stat-card-red { border-left-color: #dc2626; }
+
+.stat-card-blue .stat-card-icon { background: #eef2ff; color: #4f46e5; }
+.stat-card-green .stat-card-icon { background: #f0fdf4; color: #16a34a; }
+.stat-card-amber .stat-card-icon { background: #fffbeb; color: #d97706; }
+.stat-card-red .stat-card-icon { background: #fef2f2; color: #dc2626; }
 
 /* ---------- Data table ---------- */
 
@@ -232,8 +402,24 @@ body {
   border-bottom: 1px solid var(--color-border);
 }
 
+.data-table-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-table-sortable:hover {
+  color: var(--color-text);
+}
+
+.data-table-sort-indicator {
+  margin-left: 5px;
+  font-size: 9px;
+}
+
 .data-table td {
-  padding: 12px 16px;
+  /* ~58px total row height at 14px text — comfortably tappable, matches
+     what most modern admin tables use instead of a cramped ~40px row. */
+  padding: 18px 16px;
   font-size: 14px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -246,14 +432,29 @@ body {
   background: #f9fafb;
 }
 
-/* Used to cap a table's height inside a modal (e.g. Payment History) and
-   let it scroll on its own, independent of the rest of the modal, with
-   the column header row pinned in view the whole time. */
-.history-table-wrapper {
-  max-height: 260px;
+/* Used to cap a table's height (inside a modal, e.g. Payment History, or
+   on a full page, e.g. Students) and let it scroll on its own, with the
+   column header row pinned in view the whole time. */
+.history-table-wrapper,
+.table-scroll-wrapper,
+.attendance-roster-wrapper {
   overflow-y: auto;
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
+}
+
+.history-table-wrapper {
+  max-height: 260px;
+}
+
+.table-scroll-wrapper {
+  max-height: calc(100vh - 320px);
+}
+
+/* Now a full page (see TakeAttendancePage.tsx), not a modal — the roster
+   gets almost the whole viewport instead of being squeezed into a card. */
+.attendance-roster-wrapper {
+  max-height: calc(100vh - 380px);
 }
 
 /* The wrapper above takes over the rounded-corner/shadow styling, and its
@@ -261,12 +462,22 @@ body {
    would become the "nearest scrolling ancestor" instead of the wrapper,
    and the sticky header below would stick to the table (which doesn't
    scroll) rather than the wrapper (which does). */
-.history-table-wrapper .data-table {
+.history-table-wrapper .data-table,
+.table-scroll-wrapper .data-table,
+.attendance-roster-wrapper .data-table {
   overflow: visible;
   box-shadow: none;
+  /* Chromium leaves a phantom blank row the height of the header when a
+     sticky <th> is combined with border-collapse: collapse — switching to
+     separate (with zero spacing, so it still looks collapsed) avoids the
+     bug entirely without changing how the borders actually render. */
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.history-table-wrapper .data-table thead th {
+.history-table-wrapper .data-table thead th,
+.table-scroll-wrapper .data-table thead th,
+.attendance-roster-wrapper .data-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -302,11 +513,64 @@ body {
 
 /* ---------- Bulk attendance roster ---------- */
 
+/* Search + live tally + "Mark all Present" share one row instead of each
+   stacking on its own line — the roster table below is the actual task,
+   so the chrome above it should take as little vertical space as possible. */
 .roster-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.roster-toolbar-search {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+
+.attendance-tally {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.attendance-tally-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attendance-tally-chip-present {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.attendance-tally-chip-absent {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.attendance-tally-chip-late {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.attendance-tally-chip-unmarked {
+  background: #f3f4f6;
+  color: var(--color-text-muted);
+}
+
+/* A soft full-row tint reads at a glance while scanning a long roster —
+   lighter-weight than a text badge repeated on every unmarked row. */
+.attendance-row-unmarked {
+  background: #fffbeb;
 }
 
 /* One-click Present/Absent/Late per student row — faster for marking a
@@ -349,57 +613,196 @@ body {
   border-color: transparent;
 }
 
-/* ---------- Login page ---------- */
+/* ---------- Auth pages (Login / Setup) ----------
+   Split-panel layout: a brand panel (left) establishes context and trust
+   signals, a plain-white form panel (right) keeps the actual task —
+   signing in — free of visual noise. This is the same shape used by most
+   B2B SaaS onboarding today (Stripe, Linear, Notion) instead of a form
+   floating on a busy gradient, which reads as dated and adds no
+   information the user actually needs in the moment. */
 
+/* Exactly 100vh with its own scroll container (not the document/body):
+   content can still scroll on a very short or heavily-zoomed viewport
+   (so nothing is ever clipped or unreachable), but this container's own
+   scrollbar is hidden — visually there is never a scrollbar on this
+   page, while a trackpad/wheel/keyboard scroll still works as a safety
+   net if content genuinely doesn't fit. */
 .auth-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  scrollbar-width: none; /* Firefox */
+}
+
+.auth-page::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+
+/* Fixed to exactly the viewport height and pinned there (sticky), instead
+   of stretching to match the form panel's height. Without this, its
+   vertically-centered content would recompute its center — and visibly
+   jump — every time the form panel grows or shrinks by a line (e.g. a
+   validation error appearing or clearing as the visitor types). */
+.auth-brand-panel {
+  flex: 1 1 45%;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding: 64px;
+  background: linear-gradient(160deg, var(--color-primary-dark) 0%, #1e1b4b 100%);
+  color: #ffffff;
+  overflow: hidden;
+}
+
+/* Two large, softly-outlined circles — pure CSS, no image asset — so the
+   panel doesn't read as a flat block of empty space around the short
+   text content. Low opacity and clipped to the panel so they stay in the
+   background rather than competing with the actual copy. */
+.auth-brand-panel::before,
+.auth-brand-panel::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.auth-brand-panel::before {
+  width: 480px;
+  height: 480px;
+  top: -140px;
+  right: -160px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.auth-brand-panel::after {
+  width: 300px;
+  height: 300px;
+  bottom: -120px;
+  left: -100px;
+}
+
+/* The brand panel is context, not the task — hiding it below ~900px keeps
+   every pixel on small screens for the form, which is what the visitor
+   actually came to do. */
+@media (max-width: 900px) {
+  .auth-brand-panel {
+    display: none;
+  }
+}
+
+.auth-brand-mark {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.auth-brand-heading {
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  line-height: 1.3;
+  max-width: 22ch;
+}
+
+.auth-brand-subtext {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+  max-width: 40ch;
+}
+
+.auth-brand-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.auth-brand-fact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.auth-brand-fact-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%);
+}
+
+/* Centered vertically when the card fits (the common case — Login is only
+   two fields), but "safe" means the browser falls back to top-alignment
+   instead of clipping the title off-screen if the card ever grows taller
+   than the viewport (Setup, with several validation errors showing at
+   once). Plain "center" is set first as a fallback for browsers that don't
+   understand the "safe" keyword yet. */
+.auth-form-panel {
+  flex: 1 1 55%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-items: safe center;
+  padding: 28px 32px;
+  background: var(--color-surface);
 }
 
 .auth-card {
-  width: 360px;
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  padding: 32px;
+  width: 100%;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
 }
 
 .auth-title {
-  font-size: 20px;
+  font-size: var(--text-3xl);
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .auth-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-muted);
-  margin-top: 4px;
-  margin-bottom: 24px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+  line-height: 1.5;
 }
 
 .field-label {
+  display: block;
   font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  margin-top: 10px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 5px;
+  margin-top: 8px;
 }
 
 .text-input {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 14px;
   font-family: inherit;
+  background: var(--color-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .text-input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 .text-input:disabled {
@@ -408,19 +811,92 @@ body {
   cursor: not-allowed;
 }
 
+/* ---------- Password field (show/hide toggle) ---------- */
+
+.password-field-wrapper {
+  position: relative;
+}
+
+.password-field-wrapper .text-input {
+  padding-right: 40px;
+}
+
+.password-toggle-button {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.password-toggle-button:hover {
+  color: var(--color-text);
+  background: #f3f4f6;
+}
+
+/* ---------- Auth success state (replaces the form momentarily on
+   completion, so the visitor sees confirmation rather than an
+   instant, unexplained redirect) ---------- */
+
+.auth-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 32px 0;
+}
+
+.auth-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-success-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.auth-success-subtext {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
 .select-input {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px;
   font-size: 14px;
   font-family: inherit;
-  background: var(--color-surface);
+  background-color: var(--color-surface);
+  /* A consistent chevron across browsers instead of each OS's native
+     dropdown arrow (which vary widely and don't match the app's icons). */
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 
 .select-input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 .payment-summary {
@@ -454,10 +930,15 @@ body {
 }
 
 .primary-button {
-  margin-top: 24px;
+  margin-top: 16px;
   background: var(--color-primary);
   color: #ffffff;
-  border: none;
+  /* Transparent, not none — .secondary-button has a real 1.5px border, and
+     with height left to auto, a border adds to the box's rendered height
+     even under border-box sizing. Giving every button the same border
+     width (visible or not) keeps a Cancel/Save pair the exact same height
+     instead of Cancel sitting ~2px taller. */
+  border: 1.5px solid transparent;
   border-radius: 8px;
   /* Matches .secondary-button's padding exactly so Cancel/Submit pairs in
      a modal footer are the same size regardless of label length — before,
@@ -506,7 +987,7 @@ body {
 .danger-button {
   background: #dc2626;
   color: #ffffff;
-  border: none;
+  border: 1.5px solid transparent;
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 14px;
@@ -550,14 +1031,14 @@ body {
 .form-row {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .form-row-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 /* Grid items default to a min-width based on their content, which can
@@ -575,9 +1056,17 @@ body {
   border-color: #dc2626;
 }
 
+.text-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
 .field-error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: #dc2626;
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 500;
   margin-top: 4px;
 }
 
@@ -586,7 +1075,7 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -594,7 +1083,7 @@ body {
 }
 
 .modal-card {
-  width: 420px;
+  width: 700px;
   max-width: calc(100vw - 32px);
   /* Use nearly the full viewport height before resorting to scrolling. */
   max-height: calc(100vh - 32px);
@@ -604,27 +1093,33 @@ body {
      just clips corners cleanly for the border-radius. */
   overflow: hidden;
   background: var(--color-surface);
-  border-radius: var(--radius);
+  border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 /* For content that doesn't fit the default form width — e.g. a class
    roster table with a column per student for bulk attendance-marking. */
 .modal-card-wide {
-  width: 640px;
+  width: 860px;
 }
 
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 20px 24px 14px;
+  padding: 24px 28px 20px;
   flex-shrink: 0;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
 }
 
 .modal-body {
   flex: 1;
-  padding: 0 24px;
+  padding: 0 28px;
   overflow-y: auto;
   /* Setting overflow-y without overflow-x makes browsers compute
      overflow-x as "auto" too (per spec), which showed a stray horizontal
@@ -634,25 +1129,83 @@ body {
      of forcing the whole card taller than the viewport, which is what
      actually makes modal-body (not the whole card) the thing that scrolls. */
   min-height: 0;
+  scrollbar-width: thin;
 }
 
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 8px;
+}
+
+/* Was 30px — bigger than the page's own <h1> (--text-3xl, 22px), which
+   backwards the hierarchy: a modal is secondary/transient content launched
+   from a page, so its title shouldn't visually outrank the page itself.
+   --text-2xl keeps it clearly larger than modal-subtitle without competing
+   with the page title underneath. */
 .modal-header h2 {
-  font-size: 18px;
+  font-size: var(--text-2xl);
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .modal-close {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
+  border-radius: 8px;
   font-size: 22px;
   line-height: 1;
   color: var(--color-text-muted);
   cursor: pointer;
 }
 
+.modal-close:hover {
+  background: #f3f4f6;
+  color: var(--color-text);
+}
+
 .modal-form .field-label {
   margin-top: 0;
   display: block;
+}
+
+.modal-form input,
+.modal-form select {
+  height: 44px;
+}
+
+.required-asterisk {
+  color: #dc2626;
+  margin-left: 3px;
+  font-weight: 700;
+}
+
+/* Groups a long form into labeled sections (e.g. "Student Information" /
+   "Guardian Information") instead of one undifferentiated wall of fields. */
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin: 24px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.form-section-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 /* .primary-button carries margin-top: 24px for its standalone use on the
@@ -679,8 +1232,30 @@ body {
   bottom: 0;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  margin: 8px -24px 0;
-  padding: 14px 24px 18px;
+  margin: 8px -28px 0;
+  padding: 16px 28px 20px;
+}
+
+/* Same Cancel/Submit pairing as .modal-actions, but for a full-page form
+   (e.g. Take Attendance) — no sticky/negative-margin tricks needed since
+   there's no modal scroll boundary to pin against. */
+.page-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* .primary-button carries margin-top: 16px for its standalone use on the
+   Login page. .modal-actions already cancels that; this context needed the
+   same reset — without it, Save/Submit sat visibly lower than Cancel next
+   to it, since align-items: center on the row centers each button's full
+   margin box, and only one of the two had extra margin on top. */
+.page-form-actions .primary-button {
+  margin-top: 0;
 }
 
 .confirm-card {
@@ -700,18 +1275,27 @@ body {
 
 /* ---------- Toasts (replace window.alert) ---------- */
 
+/* Bottom-right, not top-right: a top placement has to dodge whatever
+   sits at the top of whichever page is showing it — the 60px app topbar
+   here, but also a page heading on pages with no topbar (e.g. the auth
+   pages). Nothing important normally occupies the bottom-right corner, so
+   this never needs page-specific tuning to avoid a collision. */
 .toast-stack {
   position: fixed;
-  top: 76px;
+  bottom: 20px;
   right: 20px;
+  left: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  align-items: flex-end;
   gap: 10px;
   z-index: 200;
+  pointer-events: none;
 }
 
 .toast {
-  min-width: 260px;
+  width: 100%;
+  min-width: 0;
   max-width: 360px;
   padding: 14px 16px;
   border-radius: 8px;
@@ -719,6 +1303,7 @@ body {
   font-weight: 500;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .toast-success {
@@ -734,4 +1319,338 @@ body {
 .toast-info {
   background: #dbeafe;
   color: #1e40af;
+}
+
+/* ---------- Dashboard ---------- */
+
+.dashboard-welcome {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.dashboard-section {
+  margin-top: 32px;
+}
+
+.dashboard-section-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* Quick Actions */
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.quick-action-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.quick-action-button:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+.quick-action-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+
+/* Full-page empty state (brand-new install, no data anywhere yet) */
+
+.dashboard-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 64px 20px;
+}
+
+.dashboard-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.dashboard-empty-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+
+.dashboard-empty-subtext {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  max-width: 40ch;
+}
+
+/* ---------- Skeleton loaders ---------- */
+
+.skeleton {
+  background: linear-gradient(90deg, #eceff3 25%, #f4f6f9 37%, #eceff3 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: 6px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-stat-card {
+  height: 96px;
+  border-radius: var(--radius);
+}
+
+.skeleton-line {
+  height: 14px;
+  margin: 10px 4px;
+}
+
+/* ---------- Page fade-in ---------- */
+
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+  animation: page-fade-in 0.2s ease;
+}
+
+/* ---------- Breadcrumb ---------- */
+
+.breadcrumb {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.breadcrumb a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* ---------- Row action menu (three-dot overflow) ---------- */
+
+.row-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.row-menu-trigger {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.row-menu-trigger:hover {
+  background: #f3f4f6;
+  color: var(--color-text);
+}
+
+.row-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 150px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 20;
+}
+
+/* Rendered through a portal onto document.body (see RowMenu.tsx), so it's
+   positioned in fixed/viewport coordinates via inline top/left instead of
+   relative to a row — that's what lets it escape the table's own
+   scrollable wrapper instead of being clipped by it. */
+.row-menu-dropdown-portal {
+  position: fixed;
+  right: auto;
+  z-index: 300;
+}
+
+.row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.row-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.row-menu-item-danger {
+  color: #dc2626;
+}
+
+/* ---------- List page toolbar: search + filters + bulk actions ---------- */
+
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.list-toolbar-search {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.list-toolbar-filter {
+  width: 160px;
+}
+
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  color: var(--color-primary-dark);
+}
+
+.bulk-actions-bar-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.select-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* ---------- Pagination ---------- */
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-button {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.pagination-button:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ---------- Table empty states ---------- */
+
+.table-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 56px 20px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.table-empty-state-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.table-empty-state-subtext {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  max-width: 40ch;
 }

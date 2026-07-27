@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { AttendanceRecord } from "../../shared/types";
 import { required, notFutureDate } from "../../shared/validation/rules";
+import { useFieldValidation } from "../../shared/validation/useFieldValidation";
 
 interface MarkAttendanceFormProps {
   /** Existing (studentName, date) pairs (excluding this record's own, when editing), so we can block duplicate entries. */
@@ -8,7 +9,7 @@ interface MarkAttendanceFormProps {
   /** When set, the form starts pre-filled and behaves as an edit rather than marking a new entry. */
   initialValues?: Omit<AttendanceRecord, "id">;
   onCancel: () => void;
-  onSubmit: (record: Omit<AttendanceRecord, "id">) => void;
+  onSubmit: (record: Omit<AttendanceRecord, "id">) => Promise<void>;
 }
 
 interface FormErrors {
@@ -47,7 +48,7 @@ export function MarkAttendanceForm({
       status: "Present",
     },
   );
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField<K extends keyof typeof form>(field: K, value: (typeof form)[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -76,36 +77,55 @@ export function MarkAttendanceForm({
     return nextErrors;
   }
 
-  function handleSubmit(event: FormEvent) {
+  const { shownError, clearError, handleBlur, validateOnSubmit, isFormValid } = useFieldValidation(validate);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-    onSubmit(form);
+    if (!validateOnSubmit()) return;
+    setIsSubmitting(true);
+    try {
+      await onSubmit(form);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form className="modal-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
-        <label className="field-label">Student Name</label>
+        <label className="field-label">
+          Student Name<span className="required-asterisk">*</span>
+        </label>
         <input
-          className={errors.studentName ? "text-input text-input-error" : "text-input"}
+          className={shownError("studentName") ? "text-input text-input-error" : "text-input"}
           value={form.studentName}
-          onChange={(e) => updateField("studentName", e.target.value)}
+          onChange={(e) => {
+            updateField("studentName", e.target.value);
+            clearError("studentName");
+          }}
+          onBlur={() => handleBlur("studentName")}
+          disabled={isSubmitting}
         />
-        {errors.studentName && <span className="field-error">{errors.studentName}</span>}
+        {shownError("studentName") && <span className="field-error">{shownError("studentName")}</span>}
       </div>
 
       <div className="form-row form-row-split">
         <div>
-          <label className="field-label">Class</label>
+          <label className="field-label">
+            Class<span className="required-asterisk">*</span>
+          </label>
           <input
-            className={errors.className ? "text-input text-input-error" : "text-input"}
+            className={shownError("className") ? "text-input text-input-error" : "text-input"}
             value={form.className}
-            onChange={(e) => updateField("className", e.target.value)}
+            onChange={(e) => {
+              updateField("className", e.target.value);
+              clearError("className");
+            }}
+            onBlur={() => handleBlur("className")}
             placeholder="e.g. 10-A"
+            disabled={isSubmitting}
           />
-          {errors.className && <span className="field-error">{errors.className}</span>}
+          {shownError("className") && <span className="field-error">{shownError("className")}</span>}
         </div>
         <div>
           <label className="field-label">Status</label>
@@ -113,6 +133,7 @@ export function MarkAttendanceForm({
             className="select-input"
             value={form.status}
             onChange={(e) => updateField("status", e.target.value as AttendanceRecord["status"])}
+            disabled={isSubmitting}
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -124,22 +145,29 @@ export function MarkAttendanceForm({
       </div>
 
       <div className="form-row">
-        <label className="field-label">Date</label>
+        <label className="field-label">
+          Date<span className="required-asterisk">*</span>
+        </label>
         <input
           type="date"
-          className={errors.date ? "text-input text-input-error" : "text-input"}
+          className={shownError("date") ? "text-input text-input-error" : "text-input"}
           value={form.date}
-          onChange={(e) => updateField("date", e.target.value)}
+          onChange={(e) => {
+            updateField("date", e.target.value);
+            clearError("date");
+          }}
+          onBlur={() => handleBlur("date")}
+          disabled={isSubmitting}
         />
-        {errors.date && <span className="field-error">{errors.date}</span>}
+        {shownError("date") && <span className="field-error">{shownError("date")}</span>}
       </div>
 
       <div className="modal-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button type="button" className="secondary-button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="primary-button">
-          {isEditing ? "Save Changes" : "Mark Attendance"}
+        <button type="submit" className="primary-button" disabled={!isFormValid || isSubmitting}>
+          {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Mark Attendance"}
         </button>
       </div>
     </form>

@@ -1,15 +1,27 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { clearToken, clearSchoolName, getToken, getSchoolName } from "../../shared/auth/tokenStorage";
+import { getEmailFromToken } from "../../shared/auth/jwt";
+import {
+  DashboardIcon,
+  StudentsIcon,
+  StaffIcon,
+  AttendanceIcon,
+  FeesIcon,
+  ChevronDownIcon,
+  LogoutIcon,
+} from "../../shared/components/icons";
 
 /**
  * One entry in the sidebar navigation.
  * "to" is the route path, "label" is what's shown to the user.
  */
 const navItems = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/students", label: "Students" },
-  { to: "/staff", label: "Staff" },
-  { to: "/attendance", label: "Attendance" },
-  { to: "/fees", label: "Fees" },
+  { to: "/", label: "Dashboard", end: true, Icon: DashboardIcon },
+  { to: "/students", label: "Students", end: false, Icon: StudentsIcon },
+  { to: "/staff", label: "Staff", end: false, Icon: StaffIcon },
+  { to: "/attendance", label: "Attendance", end: false, Icon: AttendanceIcon },
+  { to: "/fees", label: "Fees", end: false, Icon: FeesIcon },
 ];
 
 /**
@@ -22,22 +34,52 @@ const navItems = [
  * and topbar around it.
  */
 export function Layout() {
+  const navigate = useNavigate();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const token = getToken();
+  const email = token ? getEmailFromToken(token) : null;
+  const schoolName = getSchoolName();
+
+  function handleLogout() {
+    clearToken();
+    clearSchoolName();
+    navigate("/login", { replace: true });
+  }
+
+  // Closes the dropdown on an outside click, so it behaves like every
+  // other menu in the app instead of staying open until Log out is clicked.
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isUserMenuOpen]);
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">CampusCore</div>
         <nav className="sidebar-nav">
-          {navItems.map((item) => (
+          {navItems.map(({ to, label, end, Icon }) => (
             <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
+              key={to}
+              to={to}
+              end={end}
               // NavLink gives us isActive so we can highlight the current page.
               className={({ isActive }) =>
                 isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
               }
             >
-              {item.label}
+              <span className="sidebar-link-icon">
+                <Icon />
+              </span>
+              {label}
             </NavLink>
           ))}
         </nav>
@@ -45,10 +87,31 @@ export function Layout() {
 
       <div className="main-column">
         <header className="topbar">
-          <span className="topbar-school-name">Greenwood High School</span>
-          <div className="topbar-user">
-            <span className="topbar-user-avatar">A</span>
-            <span className="topbar-user-name">Admin</span>
+          <span className="topbar-school-name">{schoolName ?? "CampusCore"}</span>
+
+          <div className="user-menu" ref={userMenuRef}>
+            <button
+              type="button"
+              className="user-menu-trigger"
+              onClick={() => setIsUserMenuOpen((open) => !open)}
+              aria-expanded={isUserMenuOpen}
+            >
+              <span className="topbar-user-avatar">{email ? email[0].toUpperCase() : "A"}</span>
+              <span className="topbar-user-name">{email ?? "Admin"}</span>
+              <ChevronDownIcon
+                className={isUserMenuOpen ? "user-menu-chevron user-menu-chevron-open" : "user-menu-chevron"}
+              />
+            </button>
+
+            {isUserMenuOpen && (
+              <div className="user-menu-dropdown">
+                <div className="user-menu-email">{email ?? "Signed in"}</div>
+                <button type="button" className="user-menu-item user-menu-item-danger" onClick={handleLogout}>
+                  <LogoutIcon width={16} height={16} />
+                  Log out
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
